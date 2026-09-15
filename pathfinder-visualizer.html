@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathfinder — Algorithm Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1419;
+    --panel:#161D26;
+    --panel-border:#232D39;
+    --cell-empty:#1C242F;
+    --cell-empty-hover:#242E3B;
+    --wall:#3A4552;
+    --weight:#4A3A5E;
+    --visited-a:#1E5C82;
+    --visited-b:#2B87BB;
+    --frontier:#E8A33D;
+    --path:#4CAF77;
+    --start:#E8604C;
+    --end:#8A6BE8;
+    --text:#E7ECF2;
+    --text-muted:#8895A3;
+    --accent:#E8A33D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:28px;
+  }
+  h1,h2,.mono-stat,.algo-name{font-family:'Space Grotesk',sans-serif;}
+
+  .app{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:300px 1fr;
+    gap:24px;
+  }
+  header.top{
+    grid-column:1/-1;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:4px;
+    border-bottom:1px solid var(--panel-border);
+    padding-bottom:16px;
+  }
+  header.top h1{
+    font-size:26px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.top p{
+    margin:4px 0 0;
+    color:var(--text-muted);
+    font-size:14px;
+    max-width:520px;
+    line-height:1.5;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:18px;
+  }
+  .panel + .panel{margin-top:16px;}
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  select, input[type=range]{
+    width:100%;
+  }
+  select{
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .algo-desc{
+    font-size:12.5px;
+    color:var(--text-muted);
+    line-height:1.5;
+    margin-top:8px;
+    padding-top:10px;
+    border-top:1px solid var(--panel-border);
+  }
+  .algo-desc b{color:var(--text);font-weight:600;}
+
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 14px;
+    border-radius:6px;
+    border:1px solid var(--panel-border);
+    background:var(--bg);
+    color:var(--text);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  button:hover{border-color:#3A4552;background:#1A222D;}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1A1300;
+    font-weight:600;
+  }
+  button.primary:hover{background:#f0ad4f;}
+  button.full{width:100%;}
+
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .stat{
+    background:var(--bg);
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .stat .label{font-size:11px;color:var(--text-muted);}
+  .stat .value{font-size:19px;font-weight:600;margin-top:2px;}
+
+  .legend{display:flex;flex-direction:column;gap:8px;}
+  .legend-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text-muted);}
+  .swatch{width:14px;height:14px;border-radius:3px;flex:none;}
+
+  .grid-wrap{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .grid-toolbar{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .mode-hint{font-size:12px;color:var(--text-muted);}
+  .mode-hint b{color:var(--text);}
+
+  #grid{
+    display:grid;
+    gap:1px;
+    background:var(--panel-border);
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    overflow:hidden;
+    touch-action:none;
+  }
+  .cell{
+    width:22px;height:22px;
+    background:var(--cell-empty);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    transition:background .08s ease;
+  }
+  .cell:hover{background:var(--cell-empty-hover);}
+  .cell.wall{background:var(--wall);}
+  .cell.weight{background:var(--weight);}
+  .cell.weight::after{content:'';width:6px;height:6px;border-radius:50%;background:#8A6BE8;}
+  .cell.visited{background:var(--visited-a);animation:pulse .35s ease;}
+  .cell.frontier{background:var(--frontier);}
+  .cell.path{background:var(--path);}
+  .cell.start{background:var(--start);border-radius:4px;}
+  .cell.end{background:var(--end);border-radius:4px;}
+  @keyframes pulse{
+    0%{transform:scale(.5);opacity:.4;}
+    100%{transform:scale(1);opacity:1;}
+  }
+
+  .compare-panel{display:none;}
+  .compare-panel.show{display:block;}
+  .compare-row{margin-bottom:12px;}
+  .compare-row:last-child{margin-bottom:0;}
+  .compare-label{
+    display:flex;justify-content:space-between;
+    font-size:12.5px;margin-bottom:5px;
+  }
+  .compare-label .n{color:var(--text-muted);}
+  .bar-track{
+    height:8px;background:var(--bg);border-radius:4px;overflow:hidden;
+    border:1px solid var(--panel-border);
+  }
+  .bar-fill{height:100%;border-radius:4px;background:var(--visited-b);}
+
+  footer.credit{
+    grid-column:1/-1;
+    font-size:12px;
+    color:var(--text-muted);
+    text-align:center;
+    padding-top:6px;
+  }
+
+  @media (max-width:860px){
+    .app{grid-template-columns:1fr;}
+    .cell{width:16px;height:16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Pathfinder</h1>
+      <p>A grid-based visualizer comparing how BFS, DFS, Dijkstra's algorithm, and A* search a weighted graph — built to see the trade-offs, not just read about them.</p>
+    </div>
+  </header>
+
+  <div class="controls-col">
+    <div class="panel">
+      <div class="field">
+        <label for="algo-select">Algorithm</label>
+        <select id="algo-select"></select>
+        <div class="algo-desc" id="algo-desc"></div>
+      </div>
+      <div class="field">
+        <label for="speed">Animation speed</label>
+        <input type="range" id="speed" min="1" max="100" value="55">
+      </div>
+      <div class="btn-row">
+        <button class="primary full" id="run-btn">Run algorithm</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="field" style="margin-bottom:10px;">
+        <label>Editing mode (click grid to apply)</label>
+        <div class="btn-row">
+          <button id="mode-wall" data-mode="wall" class="primary">Walls</button>
+          <button id="mode-weight" data-mode="weight">Terrain</button>
+          <button id="mode-start" data-mode="start">Start</button>
+          <button id="mode-end" data-mode="end">End</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="maze-btn">Generate maze</button>
+        <button id="clear-walls-btn">Clear walls</button>
+        <button id="clear-path-btn">Clear path</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="field" style="margin-bottom:12px;"><label>Results</label></div>
+      <div class="stats-grid">
+        <div class="stat"><div class="label">Nodes visited</div><div class="value mono-stat" id="stat-visited">–</div></div>
+        <div class="stat"><div class="label">Path length</div><div class="value mono-stat" id="stat-path">–</div></div>
+        <div class="stat"><div class="label">Compute time</div><div class="value mono-stat" id="stat-time">–</div></div>
+        <div class="stat"><div class="label">Path cost</div><div class="value mono-stat" id="stat-cost">–</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="field" style="margin-bottom:10px;"><label>Legend</label></div>
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="background:var(--start);"></span>Start node</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--end);"></span>End node</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--wall);"></span>Wall (impassable)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--weight);"></span>Rough terrain (cost 5)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--visited-a);"></span>Visited / explored</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--path);"></span>Shortest path found</div>
+      </div>
+    </div>
+
+    <div class="panel compare-panel" id="compare-panel">
+      <div class="field" style="margin-bottom:12px;"><label>Compare all algorithms</label></div>
+      <div id="compare-body"></div>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="grid-toolbar">
+      <span class="mode-hint">Drag on the grid to draw. Current mode: <b id="mode-label">Walls</b></span>
+      <button id="compare-btn">Compare all algorithms</button>
+    </div>
+    <div id="grid"></div>
+  </div>
+
+  <footer class="credit">Built with vanilla HTML, CSS and JavaScript — no libraries.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Grid configuration ----------
+  const COLS = 38, ROWS = 18;
+  const grid = document.getElementById('grid');
+  grid.style.gridTemplateColumns = `repeat(${COLS}, 22px)`;
+  grid.style.gridTemplateRows = `repeat(${ROWS}, 22px)`;
+
+  let start = {r: 3, c: 4};
+  let end = {r: ROWS - 4, c: COLS - 5};
+
+  // cell state per node: 'empty' | 'wall' | 'weight'
+  const state = Array.from({length: ROWS}, () => Array(COLS).fill('empty'));
+  const cellEls = Array.from({length: ROWS}, () => Array(COLS));
+
+  let mode = 'wall';
+  let isMouseDown = false;
+  let isRunning = false;
+
+  function buildGrid(){
+    grid.innerHTML = '';
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const el = document.createElement('div');
+        el.className = 'cell';
+        el.dataset.r = r; el.dataset.c = c;
+        el.addEventListener('mousedown', e => { e.preventDefault(); isMouseDown = true; applyMode(r,c); });
+        el.addEventListener('mouseenter', () => { if(isMouseDown) applyMode(r,c); });
+        cellEls[r][c] = el;
+        grid.appendChild(el);
+      }
+    }
+    document.body.addEventListener('mouseup', () => isMouseDown = false);
+  }
+
+  function applyMode(r,c){
+    if(isRunning) return;
+    if(mode === 'start'){
+      if(state[r][c] === 'wall') return;
+      start = {r,c}; renderAll(); return;
+    }
+    if(mode === 'end'){
+      if(state[r][c] === 'wall') return;
+      end = {r,c}; renderAll(); return;
+    }
+    if(start.r===r && start.c===c) return;
+    if(end.r===r && end.c===c) return;
+    if(mode === 'wall'){
+      state[r][c] = state[r][c] === 'wall' ? 'empty' : 'wall';
+    } else if(mode === 'weight'){
+      state[r][c] = state[r][c] === 'weight' ? 'empty' : 'weight';
+    }
+    renderCell(r,c);
+  }
+
+  function renderCell(r,c){
+    const el = cellEls[r][c];
+    el.className = 'cell';
+    if(start.r===r && start.c===c) el.classList.add('start');
+    else if(end.r===r && end.c===c) el.classList.add('end');
+    else if(state[r][c] === 'wall') el.classList.add('wall');
+    else if(state[r][c] === 'weight') el.classList.add('weight');
+  }
+
+  function renderAll(){
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) renderCell(r,c);
+  }
+
+  // ---------- Mode buttons ----------
+  const modeButtons = document.querySelectorAll('[data-mode]');
+  const modeLabels = {wall:'Walls', weight:'Terrain', start:'Start', end:'End'};
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      modeButtons.forEach(b => b.classList.toggle('primary', b === btn));
+      document.getElementById('mode-label').textContent = modeLabels[mode];
+    });
+  });
+
+  // ---------- Priority queue (binary min-heap) ----------
+  class MinHeap{
+    constructor(){ this.data = []; }
+    get size(){ return this.data.length; }
+    push(item, priority){
+      this.data.push({item, priority});
+      let i = this.data.length - 1;
+      while(i > 0){
+        const p = (i-1) >> 1;
+        if(this.data[p].priority <= this.data[i].priority) break;
+        [this.data[p], this.data[i]] = [this.data[i], this.data[p]];
+        i = p;
+      }
+    }
+    pop(){
+      const top = this.data[0];
+      const last = this.data.pop();
+      if(this.data.length){
+        this.data[0] = last;
+        let i = 0;
+        while(true){
+          let l = 2*i+1, r = 2*i+2, smallest = i;
+          if(l < this.data.length && this.data[l].priority < this.data[smallest].priority) smallest = l;
+          if(r < this.data.length && this.data[r].priority < this.data[smallest].priority) smallest = r;
+          if(smallest === i) break;
+          [this.data[i], this.data[smallest]] = [this.data[smallest], this.data[i]];
+          i = smallest;
+        }
+      }
+      return top ? top.item : undefined;
+    }
+  }
+
+  // ---------- Shared helpers ----------
+  function neighbors(r,c){
+    const out = [];
+    const deltas = [[-1,0],[1,0],[0,-1],[0,1]];
+    for(const [dr,dc] of deltas){
+      const nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && state[nr][nc] !== 'wall') out.push([nr,nc]);
+    }
+    return out;
+  }
+  function cost(r,c){ return state[r][c] === 'weight' ? 5 : 1; }
+  function key(r,c){ return r*COLS+c; }
+  function manhattan(r,c){ return Math.abs(r-end.r) + Math.abs(c-end.c); }
+
+  function reconstructPath(cameFrom, endKey){
+    const path = [];
+    let k = endKey;
+    while(k !== undefined && cameFrom.has(k)){
+      const [r,c] = cameFrom.get(k).pos;
+      k = cameFrom.get(k).from;
+      path.push([r,c]);
+    }
+    return path.reverse();
+  }
+
+  // ---------- Algorithms. Each returns {visitedOrder, path, cost} ----------
+  function bfs(){
+    const visitedOrder = [];
+    const seen = new Set([key(start.r,start.c)]);
+    const cameFrom = new Map();
+    const q = [[start.r,start.c]];
+    let qi = 0;
+    while(qi < q.length){
+      const [r,c] = q[qi++];
+      visitedOrder.push([r,c]);
+      if(r===end.r && c===end.c) break;
+      for(const [nr,nc] of neighbors(r,c)){
+        const k = key(nr,nc);
+        if(!seen.has(k)){
+          seen.add(k);
+          cameFrom.set(k, {pos:[nr,nc], from:key(r,c)});
+          q.push([nr,nc]);
+        }
+      }
+    }
+    const path = seen.has(key(end.r,end.c)) ? [[start.r,start.c], ...reconstructPath(cameFrom, key(end.r,end.c))] : null;
+    return {visitedOrder, path, complexity:'O(V + E)', note:'Explores in even layers outward — guarantees the shortest path by number of steps on an unweighted grid.'};
+  }
+
+  function dfs(){
+    const visitedOrder = [];
+    const seen = new Set();
+    const cameFrom = new Map();
+    const stack = [[start.r,start.c,undefined]];
+    let found = false;
+    while(stack.length){
+      const [r,c,from] = stack.pop();
+      const k = key(r,c);
+      if(seen.has(k)) continue;
+      seen.add(k);
+      if(from !== undefined) cameFrom.set(k, {pos:[r,c], from});
+      visitedOrder.push([r,c]);
+      if(r===end.r && c===end.c){ found = true; break; }
+      for(const [nr,nc] of neighbors(r,c)){
+        if(!seen.has(key(nr,nc))) stack.push([nr,nc,k]);
+      }
+    }
+    const path = found ? [[start.r,start.c], ...reconstructPath(cameFrom, key(end.r,end.c))] : null;
+    return {visitedOrder, path, complexity:'O(V + E)', note:'Commits to one direction and backtracks only when stuck — reaches the goal but rarely by the shortest route.'};
+  }
+
+  function dijkstra(){
+    const visitedOrder = [];
+    const dist = new Map([[key(start.r,start.c), 0]]);
+    const cameFrom = new Map();
+    const seen = new Set();
+    const pq = new MinHeap();
+    pq.push([start.r,start.c], 0);
+    while(pq.size){
+      const [r,c] = pq.pop();
+      const k = key(r,c);
+      if(seen.has(k)) continue;
+      seen.add(k);
+      visitedOrder.push([r,c]);
+      if(r===end.r && c===end.c) break;
+      for(const [nr,nc] of neighbors(r,c)){
+        const nk = key(nr,nc);
+        const nd = dist.get(k) + cost(nr,nc);
+        if(!dist.has(nk) || nd < dist.get(nk)){
+          dist.set(nk, nd);
+          cameFrom.set(nk, {pos:[nr,nc], from:k});
+          pq.push([nr,nc], nd);
+        }
+      }
+    }
+    const path = dist.has(key(end.r,end.c)) ? [[start.r,start.c], ...reconstructPath(cameFrom, key(end.r,end.c))] : null;
+    return {visitedOrder, path, cost: dist.get(key(end.r,end.c)), complexity:'O((V+E) log V)', note:'Always expands the cheapest known path so far — guarantees the lowest-cost route through weighted terrain.'};
+  }
+
+  function astar(){
+    const visitedOrder = [];
+    const g = new Map([[key(start.r,start.c), 0]]);
+    const cameFrom = new Map();
+    const seen = new Set();
+    const pq = new MinHeap();
+    pq.push([start.r,start.c], manhattan(start.r,start.c));
+    while(pq.size){
+      const [r,c] = pq.pop();
+      const k = key(r,c);
+      if(seen.has(k)) continue;
+      seen.add(k);
+      visitedOrder.push([r,c]);
+      if(r===end.r && c===end.c) break;
+      for(const [nr,nc] of neighbors(r,c)){
+        const nk = key(nr,nc);
+        const ng = g.get(k) + cost(nr,nc);
+        if(!g.has(nk) || ng < g.get(nk)){
+          g.set(nk, ng);
+          cameFrom.set(nk, {pos:[nr,nc], from:k});
+          pq.push([nr,nc], ng + manhattan(nr,nc));
+        }
+      }
+    }
+    const path = g.has(key(end.r,end.c)) ? [[start.r,start.c], ...reconstructPath(cameFrom, key(end.r,end.c))] : null;
+    return {visitedOrder, path, cost: g.get(key(end.r,end.c)), complexity:'O((V+E) log V)', note:'Like Dijkstra, but a Manhattan-distance heuristic steers the search toward the goal — usually visits far fewer nodes.'};
+  }
+
+  const ALGORITHMS = {
+    bfs:      {label:'Breadth-First Search', fn: bfs},
+    dfs:      {label:'Depth-First Search',   fn: dfs},
+    dijkstra: {label:"Dijkstra's Algorithm", fn: dijkstra},
+    astar:    {label:'A* Search',            fn: astar},
+  };
+
+  const select = document.getElementById('algo-select');
+  Object.entries(ALGORITHMS).forEach(([id,a]) => {
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = a.label;
+    select.appendChild(opt);
+  });
+  function updateDesc(){
+    const dummy = {complexity:'', note:''};
+    const notes = {
+      bfs: 'Guarantees shortest path (unweighted). Time complexity <b>O(V+E)</b>.',
+      dfs: 'No shortest-path guarantee — explores depth-first. Time complexity <b>O(V+E)</b>.',
+      dijkstra: 'Guarantees lowest-cost path through weighted terrain. Time complexity <b>O((V+E) log V)</b>.',
+      astar: 'Like Dijkstra, guided by a Manhattan-distance heuristic toward the goal. Time complexity <b>O((V+E) log V)</b>.',
+    };
+    document.getElementById('algo-desc').innerHTML = notes[select.value];
+  }
+  select.addEventListener('change', updateDesc);
+  updateDesc();
+
+  // ---------- Animation ----------
+  function clearVisualOnly(){
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      if(state[r][c]==='empty' || state[r][c]==='weight') renderCell(r,c);
+    }
+  }
+
+  function speedDelay(){
+    const v = Number(document.getElementById('speed').value); // 1..100
+    return Math.max(1, 30 - Math.round(v*0.29)); // higher slider = lower delay
+  }
+
+  async function animate(visitedOrder, path){
+    const delay = speedDelay();
+    for(const [r,c] of visitedOrder){
+      if(start.r===r&&start.c===c) continue;
+      if(end.r===r&&end.c===c) continue;
+      cellEls[r][c].classList.add('visited');
+      if(delay > 0) await new Promise(res => setTimeout(res, delay));
+    }
+    if(path){
+      for(const [r,c] of path){
+        if(start.r===r&&start.c===c) continue;
+        if(end.r===r&&end.c===c) continue;
+        cellEls[r][c].classList.remove('visited');
+        cellEls[r][c].classList.add('path');
+        await new Promise(res => setTimeout(res, Math.max(4, delay)));
+      }
+    }
+  }
+
+  function setStats({visitedOrder, path, cost, time}){
+    document.getElementById('stat-visited').textContent = visitedOrder.length;
+    document.getElementById('stat-path').textContent = path ? (path.length - 1) : 'no path';
+    document.getElementById('stat-time').textContent = time.toFixed(2) + ' ms';
+    document.getElementById('stat-cost').textContent = (cost !== undefined && path) ? cost : (path ? (path.length-1) : '–');
+  }
+
+  async function run(){
+    if(isRunning) return;
+    isRunning = true;
+    document.getElementById('run-btn').disabled = true;
+    clearVisualOnly();
+    const algo = ALGORITHMS[select.value];
+    const t0 = performance.now();
+    const result = algo.fn();
+    const t1 = performance.now();
+    setStats({...result, time: t1 - t0});
+    await animate(result.visitedOrder, result.path);
+    isRunning = false;
+    document.getElementById('run-btn').disabled = false;
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+
+  document.getElementById('clear-path-btn').addEventListener('click', () => {
+    if(isRunning) return;
+    clearVisualOnly();
+    document.getElementById('stat-visited').textContent = '–';
+    document.getElementById('stat-path').textContent = '–';
+    document.getElementById('stat-time').textContent = '–';
+    document.getElementById('stat-cost').textContent = '–';
+  });
+
+  document.getElementById('clear-walls-btn').addEventListener('click', () => {
+    if(isRunning) return;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) state[r][c] = 'empty';
+    renderAll();
+  });
+
+  // ---------- Maze generation: randomized recursive division ----------
+  function generateMaze(){
+    if(isRunning) return;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) state[r][c] = 'empty';
+    // border walls
+    for(let r=0;r<ROWS;r++){ state[r][0]='wall'; state[r][COLS-1]='wall'; }
+    for(let c=0;c<COLS;c++){ state[0][c]='wall'; state[ROWS-1][c]='wall'; }
+
+    function divide(rMin,rMax,cMin,cMax){
+      const h = rMax - rMin, w = cMax - cMin;
+      if(h < 2 || w < 2) return;
+      const horizontal = h > w ? true : (w > h ? false : Math.random() < 0.5);
+      if(horizontal){
+        let wallRow = rMin + 1 + Math.floor(Math.random() * (h - 1));
+        if(wallRow % 2 !== 0) wallRow += (wallRow+1 <= rMax-1) ? 1 : -1;
+        let gap = cMin + Math.floor(Math.random() * (w+1));
+        for(let c=cMin;c<=cMax;c++){
+          if(c !== gap) state[wallRow][c] = 'wall';
+        }
+        divide(rMin, wallRow-1, cMin, cMax);
+        divide(wallRow+1, rMax, cMin, cMax);
+      } else {
+        let wallCol = cMin + 1 + Math.floor(Math.random() * (w - 1));
+        if(wallCol % 2 !== 0) wallCol += (wallCol+1 <= cMax-1) ? 1 : -1;
+        let gap = rMin + Math.floor(Math.random() * (h+1));
+        for(let r=rMin;r<=rMax;r++){
+          if(r !== gap) state[r][wallCol] = 'wall';
+        }
+        divide(rMin, rMax, cMin, wallCol-1);
+        divide(rMin, rMax, wallCol+1, cMax);
+      }
+    }
+    divide(1, ROWS-2, 1, COLS-2);
+    state[start.r][start.c] = 'empty';
+    state[end.r][end.c] = 'empty';
+    // scatter a few weighted "rough terrain" patches
+    for(let i=0;i<Math.floor(ROWS*COLS*0.03);i++){
+      const r = 1+Math.floor(Math.random()*(ROWS-2));
+      const c = 1+Math.floor(Math.random()*(COLS-2));
+      if(state[r][c]==='empty' && !(r===start.r&&c===start.c) && !(r===end.r&&c===end.c)) state[r][c]='weight';
+    }
+    renderAll();
+  }
+  document.getElementById('maze-btn').addEventListener('click', generateMaze);
+
+  // ---------- Compare all ----------
+  document.getElementById('compare-btn').addEventListener('click', () => {
+    if(isRunning) return;
+    const panel = document.getElementById('compare-panel');
+    const body = document.getElementById('compare-body');
+    panel.classList.add('show');
+    body.innerHTML = '';
+    const results = Object.entries(ALGORITHMS).map(([id,a]) => {
+      const t0 = performance.now();
+      const r = a.fn();
+      const t1 = performance.now();
+      return {id, label:a.label, visited:r.visitedOrder.length, time:t1-t0, pathLen: r.path ? r.path.length-1 : null};
+    });
+    const maxVisited = Math.max(...results.map(r => r.visited), 1);
+    results.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'compare-row';
+      const pct = Math.round((r.visited / maxVisited) * 100);
+      row.innerHTML = `
+        <div class="compare-label"><span>${r.label}</span><span class="n">${r.visited} nodes · ${r.time.toFixed(2)}ms · path ${r.pathLen ?? '—'}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
+      `;
+      body.appendChild(row);
+    });
+    clearVisualOnly();
+  });
+
+  // ---------- Init ----------
+  buildGrid();
+  renderAll();
+})();
+</script>
+</body>
+</html>
