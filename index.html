@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder - Algorithm Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="top">
+            <div>
+                <h1>Pathfinder</h1>
+                <p>
+                    A grid-based visualizer comparing how BFS, DFS, Dijkstra's algorithm,
+                    and A* search a weighted graph.
+                </p>
+            </div>
+        </header>
+
+        <aside class="controls-col">
+            <section class="panel">
+                <h2>Algorithm</h2>
+
+                <select id="algo-select">
+                    <!-- Options added by JavaScript -->
+                </select>
+
+                <button id="run-btn" class="primary">
+                    Run Algorithm
+                </button>
+
+                <button id="compare-btn">
+                    Compare Algorithms
+                </button>
+
+                <button id="maze-btn">
+                    Generate Maze
+                </button>
+
+                <button id="clear-btn">
+                    Clear Grid
+                </button>
+            </section>
+
+            <section class="panel">
+                <h2>Tools</h2>
+
+                <div class="button-grid">
+                    <button data-mode="wall" class="primary">Walls</button>
+                    <button data-mode="weight">Terrain</button>
+                    <button data-mode="start">Start</button>
+                    <button data-mode="end">End</button>
+                </div>
+
+                <p class="mode-status">
+                    Mode: <strong id="mode-label">Walls</strong>
+                </p>
+            </section>
+
+            <section class="panel">
+                <h2>Speed</h2>
+
+                <input
+                    id="speed"
+                    type="range"
+                    min="1"
+                    max="100"
+                    value="50"
+                >
+
+                <div class="speed-labels">
+                    <span>Slow</span>
+                    <span>Fast</span>
+                </div>
+            </section>
+
+            <section class="panel stats">
+                <h2>Statistics</h2>
+
+                <div class="stat-row">
+                    <span>Visited</span>
+                    <strong id="stat-visited">–</strong>
+                </div>
+
+                <div class="stat-row">
+                    <span>Path length</span>
+                    <strong id="stat-path">–</strong>
+                </div>
+
+                <div class="stat-row">
+                    <span>Path cost</span>
+                    <strong id="stat-cost">–</strong>
+                </div>
+
+                <div class="stat-row">
+                    <span>Execution time</span>
+                    <strong id="stat-time">–</strong>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Legend</h2>
+
+                <div class="legend-item">
+                    <span class="legend-box start"></span>
+                    Start
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box end"></span>
+                    End
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box wall"></span>
+                    Wall
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box weight"></span>
+                    Weighted terrain
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box visited"></span>
+                    Visited
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box path"></span>
+                    Path
+                </div>
+            </section>
+
+            <section class="panel comparison">
+                <h2>Comparison</h2>
+                <div id="compare-body">
+                    <p class="muted">
+                        Click "Compare Algorithms" to see results.
+                    </p>
+                </div>
+            </section>
+        </aside>
+
+        <main class="grid-wrap">
+            <div id="grid"></div>
+        </main>
+
+        <footer class="credit">
+            Built with vanilla HTML, CSS and JavaScript — no libraries.
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
