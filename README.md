@@ -14,7 +14,7 @@ Below is a curated layout of my web development journey and course progression.
   * *Tech Stack:* HTML5, CSS Grid, Vanilla JS.
 
 ## 📚 Course Mini-Projects
-* **[HTML & CSS Mini-Projects](Link to html-css-course-projects repo)** 
+* **[HTML & CSS Mini-Projects](https://melinasaaid.github.io/html-css-course-projects)** 
   * A collection of responsive landing pages, UI layouts, and styling exercises.
 * **[JavaScript Mini-Projects](Link to javascript-course-projects repo)**
   * Interactive widgets demonstrating DOM manipulation, API fetching, and state logic.
